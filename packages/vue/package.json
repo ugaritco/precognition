@@ -1,0 +1,42 @@
+{
+  "name": "ugarit-precognition-vue",
+  "version": "1.00.00",
+  "description": "Ugarit Precognition (Vue).",
+  "keywords": [
+    "ugarit",
+    "precognition",
+    "vue"
+  ],
+  "homepage": "https://github.com/ugarit/precognition",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ugarit/precognition"
+  },
+  "license": "MIT",
+  "author": "Ugarit",
+  "main": "dist/index.js",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "watch": "rm -rf dist && tsc --watch --preserveWatchOutput",
+    "build": "rm -rf dist && tsc",
+    "typeCheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "version": "npm pkg set dependencies.ugarit-precognition=$npm_package_version",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "vue": "^3.0.0"
+  },
+  "dependencies": {
+    "es-toolkit": "^1.32.0",
+    "ugarit-precognition": "2.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.8"
+  }
+}

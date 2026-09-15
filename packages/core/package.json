@@ -1,0 +1,56 @@
+{
+  "name": "ugarit-precognition",
+  "version": "1.00.00",
+  "description": "Ugarit Precognition.",
+  "keywords": [
+    "ugarit",
+    "precognition"
+  ],
+  "homepage": "https://github.com/ugarit/precognition",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ugarit/precognition"
+  },
+  "license": "MIT",
+  "author": "Ugarit",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./axios": {
+      "types": "./dist/http/axiosAdapter.d.ts",
+      "default": "./dist/http/axiosAdapter.js"
+    }
+  },
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "watch": "rm -rf dist && tsc --watch --preserveWatchOutput",
+    "build": "rm -rf dist && tsc",
+    "typeCheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "es-toolkit": "^1.32.0"
+  },
+  "peerDependencies": {
+    "axios": "^1.4.0"
+  },
+  "peerDependenciesMeta": {
+    "axios": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "axios": "^1.4.0",
+    "typescript": "^5.0.0",
+    "vitest": "^4.1.8"
+  }
+}

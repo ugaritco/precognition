@@ -1,0 +1,40 @@
+{
+  "name": "ugarit-precognition-react",
+  "version": "1.00.00",
+  "description": "Ugarit Precognition (React).",
+  "keywords": [
+    "ugarit",
+    "precognition",
+    "react"
+  ],
+  "homepage": "https://github.com/ugarit/precognition",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ugarit/precognition"
+  },
+  "license": "MIT",
+  "author": "Ugarit",
+  "main": "dist/index.js",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "watch": "rm -rf dist && tsc --watch --preserveWatchOutput",
+    "build": "rm -rf dist && tsc",
+    "typeCheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "version": "npm pkg set dependencies.ugarit-precognition=$npm_package_version"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  },
+  "dependencies": {
+    "es-toolkit": "^1.32.0",
+    "ugarit-precognition": "2.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.6 || ^19.0.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,188 @@
+import { Config, RequestMethod, client, createValidator, toSimpleValidationErrors, ValidationConfig, resolveUrl, resolveMethod , resolveName } from 'ugarit-precognition'
+import { axiosAdapter } from 'ugarit-precognition/axios'
+import { Form } from './types.js'
+import { reactive, ref, toRaw } from 'vue'
+import { cloneDeep } from 'es-toolkit'
+import { get, set } from 'es-toolkit/compat'
+
+export { client, Form, axiosAdapter }
+
+export const useForm = <Data extends Record<string, unknown>>(method: RequestMethod | (() => RequestMethod), url: string | (() => string), inputs: Data | (() => Data), config: ValidationConfig = {}): Data & Form<Data> => {
+    /**
+     * The original data.
+     */
+    const originalData = typeof inputs === 'function' ? cloneDeep(inputs()) : cloneDeep(inputs)
+
+    /**
+     * The original input names.
+     */
+    const originalInputs: (keyof Data)[] = Object.keys(originalData)
+
+    /**
+     * Reactive valid state.
+     */
+    const valid = ref<string[]>([])
+
+    /**
+     * Reactive touched state.
+     */
+    const touched = ref<string[]>([])
+
+    /**
+     * The validator instance.
+     */
+    const validator = createValidator((client) => client[resolveMethod(method)](resolveUrl(url), form.data(), config), originalData)
+        .on('validatingChanged', () => {
+            form.validating = validator.validating()
+        })
+        .on('validatedChanged', () => {
+            valid.value = validator.valid()
+        })
+        .on('touchedChanged', () => {
+            touched.value = validator.touched()
+        })
+        .on('errorsChanged', () => {
+            form.hasErrors = validator.hasErrors()
+
+            // @ts-expect-error
+            form.errors = toSimpleValidationErrors(validator.errors())
+
+            valid.value = validator.valid()
+        })
+
+    /**
+     * Resolve the config for a form submission.
+     */
+    const resolveSubmitConfig = (config: Config): Config => ({
+        ...config,
+        precognitive: false,
+        onStart: () => {
+            form.processing = true;
+
+            (config.onStart ?? (() => null))()
+        },
+        onFinish: () => {
+            form.processing = false;
+
+            (config.onFinish ?? (() => null))()
+        },
+        onValidationError: (response, error) => {
+            validator.setErrors(response.data.errors)
+
+            return config.onValidationError
+                ? config.onValidationError(response)
+                : Promise.reject(error)
+        },
+    })
+
+    /**
+     * Create a new form instance.
+     */
+    let form: Data & Form<Data> = {
+        ...cloneDeep(originalData),
+        data() {
+            const data = cloneDeep(toRaw(form))
+
+            return originalInputs.reduce<Partial<Data>>((carry, name) => ({
+                ...carry,
+                [name]: data[name],
+            }), {}) as Data
+        },
+        setData(data: Record<string, unknown>) {
+            Object.keys(data).forEach((input) => {
+                // @ts-expect-error
+                form[input] = data[input]
+            })
+
+            return form
+        },
+        touched(name) {
+            if (typeof name === 'string') {
+                return touched.value.includes(name)
+            } else {
+                return touched.value.length > 0
+            }
+        },
+        touch(name) {
+            validator.touch(name)
+
+            return form
+        },
+        validate(name, config) {
+            if (typeof name === 'object' && !('target' in name)) {
+                config = name
+                name = undefined
+            }
+
+            if (typeof name === 'undefined') {
+                validator.validate(config)
+            } else {
+                const resolvedName = resolveName(name)
+
+                validator.validate(resolvedName, get(form.data(), resolvedName), config)
+            }
+
+            return form
+        },
+        validating: false,
+        valid(name) {
+            return valid.value.includes(name)
+        },
+        invalid(name) {
+            return typeof form.errors[name] !== 'undefined'
+        },
+        errors: {},
+        hasErrors: false,
+        setErrors(errors) {
+            // @ts-expect-error
+            validator.setErrors(errors)
+
+            return form
+        },
+        forgetError(name) {
+            validator.forgetError(name)
+
+            return form
+        },
+        reset(...names) {
+            const original = typeof inputs === 'function' ? cloneDeep(inputs()) : cloneDeep(originalData)
+
+            if (names.length === 0) {
+                // @ts-expect-error
+                originalInputs.forEach((name) => (form[name] = original[name]))
+            } else {
+                names.forEach((name) => set(form, name, get(original, name)))
+            }
+
+            validator.reset(...names)
+
+            return form
+        },
+        setValidationTimeout(duration) {
+            validator.setTimeout(duration)
+
+            return form
+        },
+        processing: false,
+        async submit(config = {}) {
+            return client[resolveMethod(method)](resolveUrl(url), form.data(), resolveSubmitConfig(config))
+        },
+        validateFiles() {
+            validator.validateFiles()
+
+            return form
+        },
+        withoutFileValidation() {
+            validator.withoutFileValidation()
+
+            return form
+        },
+        validator() {
+            return validator
+        },
+    }
+
+    form = reactive(form) as Data & Form<Data>
+
+    return form
+}
